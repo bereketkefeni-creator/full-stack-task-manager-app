@@ -1,0 +1,623 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>TaskMaster - Full-Stack CRUD App</title>
+    <script src="https://unpkg.com/react@18/umd/react.development.js"></script>
+    <script src="https://unpkg.com/react-dom@18/umd/react-dom.development.js"></script>
+    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+    <script src="https://unpkg.com/axios/dist/axios.min.js"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+        
+        body {
+            background: linear-gradient(135deg, #1a2980, #26d0ce);
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+            color: #333;
+        }
+        
+        .container {
+            width: 100%;
+            max-width: 800px;
+            background: white;
+            border-radius: 16px;
+            box-shadow: 0 15px 35px rgba(0, 0, 0, 0.25);
+            overflow: hidden;
+        }
+        
+        .header {
+            background: linear-gradient(135deg, #3a7bd5, #00d2ff);
+            color: white;
+            padding: 25px 30px;
+            text-align: center;
+        }
+        
+        h1 {
+            font-weight: 600;
+            font-size: 28px;
+            margin-bottom: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 12px;
+        }
+        
+        .app-content {
+            padding: 25px;
+        }
+        
+        .task-form {
+            display: flex;
+            margin-bottom: 25px;
+            gap: 10px;
+        }
+        
+        .task-input {
+            flex: 1;
+            padding: 16px;
+            border: 2px solid #e0e0e0;
+            border-radius: 10px;
+            font-size: 16px;
+            outline: none;
+            transition: all 0.3s;
+        }
+        
+        .task-input:focus {
+            border-color: #3a7bd5;
+            box-shadow: 0 0 0 3px rgba(58, 123, 213, 0.2);
+        }
+        
+        .add-btn {
+            background: linear-gradient(135deg, #3a7bd5, #00d2ff);
+            color: white;
+            border: none;
+            padding: 16px 20px;
+            border-radius: 10px;
+            cursor: pointer;
+            font-size: 16px;
+            font-weight: 500;
+            transition: all 0.3s;
+        }
+        
+        .add-btn:hover {
+            transform: scale(1.05);
+            box-shadow: 0 5px 15px rgba(58, 123, 213, 0.4);
+        }
+        
+        .tasks-container {
+            max-height: 400px;
+            overflow-y: auto;
+            margin-bottom: 20px;
+            padding-right: 5px;
+        }
+        
+        .tasks-container::-webkit-scrollbar {
+            width: 6px;
+        }
+        
+        .tasks-container::-webkit-scrollbar-track {
+            background: #f1f1f1;
+            border-radius: 10px;
+        }
+        
+        .tasks-container::-webkit-scrollbar-thumb {
+            background: linear-gradient(135deg, #3a7bd5, #00d2ff);
+            border-radius: 10px;
+        }
+        
+        .task-item {
+            display: flex;
+            align-items: center;
+            padding: 16px;
+            background-color: #f8f9fa;
+            border-radius: 10px;
+            margin-bottom: 12px;
+            animation: fadeIn 0.5s ease;
+            transition: transform 0.2s;
+        }
+        
+        .task-item:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+        }
+        
+        .task-checkbox {
+            width: 22px;
+            height: 22px;
+            cursor: pointer;
+            margin-right: 15px;
+            accent-color: #3a7bd5;
+        }
+        
+        .task-text {
+            flex: 1;
+            font-size: 16px;
+            word-break: break-word;
+            transition: all 0.3s;
+        }
+        
+        .completed .task-text {
+            text-decoration: line-through;
+            color: #888;
+        }
+        
+        .task-actions {
+            display: flex;
+            gap: 10px;
+        }
+        
+        .edit-btn, .delete-btn {
+            background: none;
+            border: none;
+            cursor: pointer;
+            font-size: 16px;
+            padding: 5px;
+            transition: all 0.3s;
+            opacity: 0.7;
+        }
+        
+        .edit-btn {
+            color: #3a7bd5;
+        }
+        
+        .delete-btn {
+            color: #ff4757;
+        }
+        
+        .edit-btn:hover, .delete-btn:hover {
+            transform: scale(1.1);
+            opacity: 1;
+        }
+        
+        .empty-state {
+            text-align: center;
+            padding: 30px;
+            color: #888;
+        }
+        
+        .empty-state i {
+            font-size: 50px;
+            margin-bottom: 15px;
+            color: #d0d0d0;
+        }
+        
+        .stats {
+            display: flex;
+            justify-content: space-between;
+            padding: 15px 20px;
+            background-color: #f8f9fa;
+            border-radius: 10px;
+            font-size: 14px;
+            color: #666;
+            margin-top: 20px;
+        }
+        
+        .stats span {
+            font-weight: 600;
+            color: #3a7bd5;
+        }
+        
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+                transform: translateY(20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+        
+        .task-counter {
+            display: flex;
+            gap: 15px;
+        }
+        
+        .edit-form {
+            display: flex;
+            gap: 10px;
+            width: 100%;
+        }
+        
+        .edit-input {
+            flex: 1;
+            padding: 10px;
+            border: 2px solid #e0e0e0;
+            border-radius: 6px;
+            font-size: 16px;
+        }
+        
+        .save-btn, .cancel-btn {
+            padding: 10px 15px;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 14px;
+        }
+        
+        .save-btn {
+            background: #3a7bd5;
+            color: white;
+        }
+        
+        .cancel-btn {
+            background: #95a5a6;
+            color: white;
+        }
+        
+        .notification {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            padding: 15px 20px;
+            background: white;
+            border-radius: 8px;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
+            transform: translateX(100%);
+            transition: transform 0.3s ease;
+            z-index: 1000;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        
+        .notification.show {
+            transform: translateX(0);
+        }
+        
+        .notification.success {
+            border-left: 4px solid #4caf50;
+        }
+        
+        .notification.error {
+            border-left: 4px solid #ff4757;
+        }
+        
+        .footer {
+            text-align: center;
+            padding: 15px;
+            color: #7f8c8d;
+            font-size: 12px;
+            border-top: 1px solid #eee;
+        }
+        
+        @media (max-width: 600px) {
+            .task-form {
+                flex-direction: column;
+            }
+            
+            .task-item {
+                flex-direction: column;
+                align-items: flex-start;
+                gap: 15px;
+            }
+            
+            .task-actions {
+                align-self: flex-end;
+            }
+            
+            .stats {
+                flex-direction: column;
+                gap: 10px;
+            }
+            
+            .task-counter {
+                justify-content: space-between;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div id="root"></div>
+
+    <script type="text/babel">
+        // React Components
+        const { useState, useEffect } = React;
+
+        // Task Item Component
+        function TaskItem({ task, onToggle, onDelete, onEdit }) {
+            const [isEditing, setIsEditing] = useState(false);
+            const [editText, setEditText] = useState(task.text);
+            
+            const handleSave = () => {
+                if (editText.trim() !== '') {
+                    onEdit(task.id, editText);
+                    setIsEditing(false);
+                }
+            };
+            
+            const handleCancel = () => {
+                setEditText(task.text);
+                setIsEditing(false);
+            };
+            
+            return (
+                <div className={`task-item ${task.completed ? 'completed' : ''}`}>
+                    <input 
+                        type="checkbox" 
+                        className="task-checkbox" 
+                        checked={task.completed}
+                        onChange={() => onToggle(task.id)}
+                    />
+                    
+                    {isEditing ? (
+                        <div className="edit-form">
+                            <input
+                                type="text"
+                                className="edit-input"
+                                value={editText}
+                                onChange={(e) => setEditText(e.target.value)}
+                            />
+                            <button className="save-btn" onClick={handleSave}>
+                                Save
+                            </button>
+                            <button className="cancel-btn" onClick={handleCancel}>
+                                Cancel
+                            </button>
+                        </div>
+                    ) : (
+                        <>
+                            <span className="task-text">{task.text}</span>
+                            <div className="task-actions">
+                                <button className="edit-btn" onClick={() => setIsEditing(true)}>
+                                    <i className="fas fa-edit"></i>
+                                </button>
+                                <button className="delete-btn" onClick={() => onDelete(task.id)}>
+                                    <i className="fas fa-trash-alt"></i>
+                                </button>
+                            </div>
+                        </>
+                    )}
+                </div>
+            );
+        }
+
+        // Main Task Manager Component
+        function TaskManager() {
+            const [tasks, setTasks] = useState([]);
+            const [taskText, setTaskText] = useState('');
+            const [loading, setLoading] = useState(true);
+            const [notification, setNotification] = useState({ show: false, message: '', type: '' });
+            
+            // Simulated API calls (in a real app, these would be actual API calls)
+            const API = {
+                // Get all tasks
+                getTasks: async () => {
+                    // Simulate API delay
+                    await new Promise(resolve => setTimeout(resolve, 500));
+                    
+                    // Get from localStorage or return default tasks
+                    const storedTasks = localStorage.getItem('tasks');
+                    if (storedTasks) {
+                        return JSON.parse(storedTasks);
+                    }
+                    
+                    // Default tasks if none exist
+                    return [
+                        { id: 1, text: 'Learn React Fundamentals', completed: false },
+                        { id: 2, text: 'Build a CRUD Application', completed: false },
+                        { id: 3, text: 'Deploy to Production', completed: true }
+                    ];
+                },
+                
+                // Create a new task
+                createTask: async (text) => {
+                    await new Promise(resolve => setTimeout(resolve, 300));
+                    
+                    const newTask = {
+                        id: Date.now(),
+                        text,
+                        completed: false
+                    };
+                    
+                    const storedTasks = localStorage.getItem('tasks');
+                    const tasks = storedTasks ? JSON.parse(storedTasks) : [];
+                    tasks.push(newTask);
+                    localStorage.setItem('tasks', JSON.stringify(tasks));
+                    
+                    return newTask;
+                },
+                
+                // Update a task
+                updateTask: async (id, updates) => {
+                    await new Promise(resolve => setTimeout(resolve, 300));
+                    
+                    const storedTasks = localStorage.getItem('tasks');
+                    const tasks = storedTasks ? JSON.parse(storedTasks) : [];
+                    const updatedTasks = tasks.map(task => 
+                        task.id === id ? { ...task, ...updates } : task
+                    );
+                    localStorage.setItem('tasks', JSON.stringify(updatedTasks));
+                    
+                    return updatedTasks.find(task => task.id === id);
+                },
+                
+                // Delete a task
+                deleteTask: async (id) => {
+                    await new Promise(resolve => setTimeout(resolve, 300));
+                    
+                    const storedTasks = localStorage.getItem('tasks');
+                    const tasks = storedTasks ? JSON.parse(storedTasks) : [];
+                    const filteredTasks = tasks.filter(task => task.id !== id);
+                    localStorage.setItem('tasks', JSON.stringify(filteredTasks));
+                    
+                    return { success: true };
+                }
+            };
+            
+            // Load tasks on component mount
+            useEffect(() => {
+                loadTasks();
+            }, []);
+            
+            const loadTasks = async () => {
+                try {
+                    setLoading(true);
+                    const tasksData = await API.getTasks();
+                    setTasks(tasksData);
+                    setLoading(false);
+                } catch (error) {
+                    showNotification('Error loading tasks', 'error');
+                    setLoading(false);
+                }
+            };
+            
+            const addTask = async () => {
+                if (taskText.trim() === '') {
+                    showNotification('Task cannot be empty', 'error');
+                    return;
+                }
+                
+                try {
+                    const newTask = await API.createTask(taskText);
+                    setTasks([...tasks, newTask]);
+                    setTaskText('');
+                    showNotification('Task added successfully', 'success');
+                } catch (error) {
+                    showNotification('Error adding task', 'error');
+                }
+            };
+            
+            const toggleTask = async (id) => {
+                try {
+                    const task = tasks.find(t => t.id === id);
+                    const updatedTask = await API.updateTask(id, { completed: !task.completed });
+                    
+                    setTasks(tasks.map(task => 
+                        task.id === id ? updatedTask : task
+                    ));
+                    
+                    showNotification(
+                        updatedTask.completed ? 'Task completed!' : 'Task marked as incomplete', 
+                        'success'
+                    );
+                } catch (error) {
+                    showNotification('Error updating task', 'error');
+                }
+            };
+            
+            const editTask = async (id, newText) => {
+                if (newText.trim() === '') {
+                    showNotification('Task cannot be empty', 'error');
+                    return;
+                }
+                
+                try {
+                    const updatedTask = await API.updateTask(id, { text: newText });
+                    
+                    setTasks(tasks.map(task => 
+                        task.id === id ? updatedTask : task
+                    ));
+                    
+                    showNotification('Task updated successfully', 'success');
+                } catch (error) {
+                    showNotification('Error updating task', 'error');
+                }
+            };
+            
+            const deleteTask = async (id) => {
+                try {
+                    await API.deleteTask(id);
+                    setTasks(tasks.filter(task => task.id !== id));
+                    showNotification('Task deleted successfully', 'success');
+                } catch (error) {
+                    showNotification('Error deleting task', 'error');
+                }
+            };
+            
+            const showNotification = (message, type) => {
+                setNotification({ show: true, message, type });
+                setTimeout(() => {
+                    setNotification({ show: false, message: '', type: '' });
+                }, 3000);
+            };
+            
+            const completedTasks = tasks.filter(task => task.completed).length;
+            const totalTasks = tasks.length;
+            
+            return (
+                <div className="container">
+                    <div className="header">
+                        <h1><i className="fas fa-tasks"></i> TaskMaster</h1>
+                        <p>Full-Stack CRUD Application</p>
+                    </div>
+                    
+                    <div className="app-content">
+                        <div className="task-form">
+                            <input
+                                type="text"
+                                className="task-input"
+                                placeholder="Enter a new task..."
+                                value={taskText}
+                                onChange={(e) => setTaskText(e.target.value)}
+                                onKeyPress={(e) => e.key === 'Enter' && addTask()}
+                            />
+                            <button className="add-btn" onClick={addTask}>
+                                <i className="fas fa-plus"></i> Add Task
+                            </button>
+                        </div>
+                        
+                        {notification.show && (
+                            <div className={`notification ${notification.type} show`}>
+                                <i className={`fas ${notification.type === 'success' ? 'fa-check-circle' : 'fa-exclamation-circle'}`}></i>
+                                {notification.message}
+                            </div>
+                        )}
+                        
+                        <div className="tasks-container">
+                            {loading ? (
+                                <div className="empty-state">
+                                    <i className="fas fa-spinner fa-spin"></i>
+                                    <p>Loading tasks...</p>
+                                </div>
+                            ) : tasks.length === 0 ? (
+                                <div className="empty-state">
+                                    <i className="fas fa-clipboard-list"></i>
+                                    <h3>No tasks yet</h3>
+                                    <p>Add a task to get started!</p>
+                                </div>
+                            ) : (
+                                tasks.map(task => (
+                                    <TaskItem
+                                        key={task.id}
+                                        task={task}
+                                        onToggle={toggleTask}
+                                        onDelete={deleteTask}
+                                        onEdit={editTask}
+                                    />
+                                ))
+                            )}
+                        </div>
+                        
+                        <div className="stats">
+                            <div className="task-counter">
+                                <div>Total: <span>{totalTasks}</span></div>
+                                <div>Completed: <span>{completedTasks}</span></div>
+                            </div>
+                            <div>Progress: <span>{totalTasks > 0 ? Math.round((completedTasks / totalTasks) * 100) : 0}%</span></div>
+                        </div>
+                    </div>
+                    
+                    <div className="footer">
+                        <p>Full-Stack CRUD Application with React Frontend and Simulated Backend API</p>
+                    </div>
+                </div>
+            );
+        }
+
+        // Render the App
+        ReactDOM.createRoot(document.getElementById('root')).render(<TaskManager />);
+    </script>
+</body>
+</html>
